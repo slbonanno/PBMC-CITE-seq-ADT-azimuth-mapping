@@ -1,0 +1,20 @@
+# renv
+renv/library/
+renv/staging/
+
+# Data (too large for git, download instructions documented in README instead)
+data/raw/*
+data/reference/*
+data/processed/*
+!data/raw/.gitkeep
+!data/reference/.gitkeep
+!data/processed/.gitkeep
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# OS
+.DS_Store
