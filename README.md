@@ -3,7 +3,40 @@
 Project local dir:
 `/Users/shivanbonanno/science/projects/PBMC-CITE-seq-ADT-azimuth-mapping`
 
+### 1-I. Directory structure (terminal)
+```bash
+mkdir -p PBMC-CITE-seq-ADT-azimuth-mapping/{data/raw,data/processed,data/reference,R,notebooks,figures,output}
+cd PBMC-CITE-seq-ADT-azimuth-mapping
+touch README.md .gitignore
+touch data/raw/.gitkeep data/reference/.gitkeep data/processed/.gitkeep
+```
+
+`.gitignore`:
+```
+# renv
+renv/library/
+renv/staging/
+
+# Data (too large for git, download instructions documented instead)
+data/raw/*
+data/reference/*
+data/processed/*
+!data/raw/.gitkeep
+!data/reference/.gitkeep
+!data/processed/.gitkeep
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# OS
+.DS_Store
+```
+
 ### 1-II. R environment setup
+
 Use the native R install (not conda-managed) - better for pkg mgmt:
 ```bash
 which -a R
@@ -11,6 +44,7 @@ which -a R
 # R version 4.6.1 (installed fresh via .pkg from mac.r-project.org;
 # originally started on R 4.5.1, upgraded after OpenMP/toolchain issues below)
 ```
+
 Required system toolchain (install before package installs, avoids
 compile errors later):
 ```bash
@@ -24,7 +58,12 @@ brew install gettext
 # download gfortran-14.2-universal.pkg from https://mac.r-project.org/tools/
 # and run the installer (installs to /opt/gfortran)
 ```
+
 `~/.R/Makevars` (points compiler at gettext):
+```
+CPPFLAGS += -I/opt/homebrew/opt/gettext/include
+LDFLAGS += -L/opt/homebrew/opt/gettext/lib -lintl
+```
 
 Open R studio, confirm it is pointed at this R version: Tools → Global Options →
 General → R version
@@ -69,19 +108,13 @@ utils::install.packages("dotCall64", type = "source", repos = "https://cran.r-pr
 utils::install.packages("Rtsne", type = "source", repos = "https://cran.r-project.org", lib = .libPaths()[1])
 ```
 
-# 2. selection + download of datasets for this project
+# 2. Selection + download of datasets for this project
+
 #### project goal: demonstrate CITE-seq QC + reference mapping, relevant to platform-validation workflows
 
 ### 2-I. choose datasets
-**Dataset 1 — 10x Genomics PBMC CITE-seq demo (query)**
-- standard demo dataset: 10k PBMCs, healthy donor, TotalSeq-C TBNK panel (BioLegend)
-- CC BY 4.0 licensed
-- download "Feature / cell matrix HDF5 (per-sample)" `.h5` from Output and supplemental files
-- Cell Ranger output, pre-processed matrix (RNA + ADT)
-- mimics real platform-validation data: no annotation yet
-- goal: QC, cluster, map onto reference below
 
-**Dataset 2 — Hao et al. 2021 (Satija lab) CITE-seq reference**
+**Dataset 1 — Hao et al. 2021 (Satija lab) CITE-seq reference**
 - 161,764 PBMCs, 8 donors, 228 ADT panel
 - expert-annotated, 3 levels of granularity (WNN-based)
 - PBMC cell types stable across datasets → mapping valid
@@ -89,27 +122,36 @@ utils::install.packages("Rtsne", type = "source", repos = "https://cran.r-projec
 - Azimuth-compatible reference, standard tool for this exact task
 - well-cited, heavily vetted annotation quality
 
+**Dataset 2 — 10x Genomics PBMC CITE-seq demo (query)**
+- standard demo dataset: 10k PBMCs, healthy donor, TotalSeq-C TBNK panel (BioLegend)
+- CC BY 4.0 licensed
+- Cell Ranger output, pre-processed matrix (RNA + ADT)
+- mimics real platform-validation data: no annotation yet
+- goal: QC, cluster, map onto reference above
+
 ### 2-II. download data
+
 **Dataset 1 — Hao et al. 2021 PBMC reference (Azimuth)**
 No manual download or separate loading step for this.
 This CITE-seq PBMC dataset was made by Hao et al, and expert-annotated
-(161,764 cells, 8 donors)
-It is available through Azimuth, so we can map other datasets to it.
+(161,764 cells, 8 donors). It is available through Azimuth, so we can map
+other datasets to it.
 
-RunAzimuth(query, reference = "pbmcref") downloads and caches the reference
+`RunAzimuth(query, reference = "pbmcref")` downloads and caches the reference
 automatically on first run, then maps query cells and transfers cell type
-labels directly.  RunAzimuth will be run in the first notebook 01, not here.
+labels directly. RunAzimuth is run in notebook 01, not here.
 
 **Dataset 2 — 10x Genomics PBMC CITE-seq demo**
 Source page: https://www.10xgenomics.com/datasets/integrated-gex-totalseq-c-and-bcr-analysis-of-chromium-connect-generated-library-from-10k-human-pbmcs-2-standard
 File used: Output and supplemental files/Gene Expression - Feature / cell matrix HDF5 (per-sample)
 File size: 31.9MB
 md5sum: 192eb0a882b8ebe89830d76bcecad45c
-date of download in this format: 2026-07-22
+date of download: 2026-07-22
 ```bash
 cd /Users/shivanbonanno/science/projects/PBMC-CITE-seq-ADT-azimuth-mapping
 curl -L -o data/raw/filtered_feature_bc_matrix.h5 "https://cf.10xgenomics.com/samples/cell-vdj/6.1.2/10k_PBMC_TBNK_connect_10k_PBMC_TBNK_connect/10k_PBMC_TBNK_connect_10k_PBMC_TBNK_connect_count_sample_feature_bc_matrix.h5"
 ```
+
 # 3. Analysis Pipeline & Figures
 
 ### 3-I. Load, QC, and Azimuth mapping (notebooks/01_load_data_and_qc.R)
@@ -128,9 +170,19 @@ curl -L -o data/raw/filtered_feature_bc_matrix.h5 "https://cf.10xgenomics.com/sa
     + per-cell confidence scores
 - save: `data/processed/d2_pbmc_10x_CITE_filtered_annotated.rds`
 
-No figure - QC violin plots (unfiltered/filtered) live in `figures/`
-(`01_ds2_unfiltered_qc_violins.png`, `01_ds2_filtered_qc_violins.png`) but are
-diagnostic, not part of the main figure narrative.
+**Figure 1 - QC violin plots (unfiltered vs. filtered)**
+diagnostic, not part of the main figure narrative:
+
+<table>
+<tr>
+<td><img src="figures/01_ds2_unfiltered_qc_violins.png" width="400"/></td>
+<td><img src="figures/01_ds2_filtered_qc_violins.png" width="400"/></td>
+</tr>
+<tr>
+<td align="center">Unfiltered</td>
+<td align="center">Filtered</td>
+</tr>
+</table>
 
 ### 3-II. ADT normalization + concordance overview (notebooks/02_adt_normalization_and_viz.R)
 
@@ -139,21 +191,21 @@ diagnostic, not part of the main figure narrative.
   not directly comparable to RNA library-size normalization)
 - de novo RNA-only clustering (no Azimuth) for comparison
 
-**Figure 1 - de novo RNA-only overview (no reference)**
-`figures/02_fig1_denovo_overview.png`
+**Figure 2 - de novo RNA-only overview (no reference)**
+![Figure 2](figures/02_fig1_denovo_overview.png)
 A) unlabeled RNA clusters, B) 3-marker ADT color blend overlay (CD14 red /
 CD19 green / CD3 blue), C) top-2 marker gene dotplot per cluster.
 Shows what a from-scratch analysis looks like without a reference.
 
-**Figure 2 - Azimuth-guided mapping**
-`figures/02_fig2_refumap_2x2.png`
+**Figure 3 - Azimuth-guided mapping**
+![Figure 3](figures/02_fig2_refumap_2x2.png)
 2x2: A) predicted.celltype.l1, B) l2, C) l3 (Azimuth ref.umap, labeled at
 each cluster's centroid), D) same 3-marker ADT blend overlaid on l3 clusters.
 Confirms mapping is biologically sensible: dominant CD4 T (39%) and
 Monocyte (27%) populations, expected PBMC composition overall.
 
-**Figure 3 - ADT vs. RNA concordance**
-`figures/02_fig3_full.png`
+**Figure 4 - ADT vs. RNA concordance**
+![Figure 4](figures/02_fig3_full.png)
 A) heatmap (marker x predicted.celltype.l2, ADT and RNA panels, both
 z-scored, ordered by hierarchical clustering), B) correlation across all
 marker/cluster pairs pooled, C) CD8 detail (single-cell, both modalities
@@ -169,8 +221,8 @@ for exactly this kind of stable, unambiguous lineage discrimination.
 - WNN (weighted nearest neighbor) clustering using RNA + ADT jointly,
   compared against RNA-only clustering via Adjusted Rand Index (ARI)
 
-**Figure - ADT rescues RNA dropout**
-`figures/03_fig_dropout_rescue.png`
+**Figure 5 - ADT rescues RNA dropout**
+![Dropout rescue](figures/03_fig_dropout_rescue.png)
 3.2% of Azimuth-confirmed T cells (189 of 5,980) have zero RNA counts across
 all three CD3 genes (CD3D/E/G) - complete dropout for a canonical T cell
 marker, despite Azimuth confidently calling these cells T cells from broader
@@ -179,8 +231,8 @@ close to the RNA-detected T cell group, well above the B cell negative
 control - concrete evidence that protein detection rescues real signal RNA
 alone misses, even with a "stable" marker panel.
 
-**Figure - WNN vs. RNA-only clustering**
-`figures/03_fig_wnn_vs_rna.png`
+**Figure 6 - WNN vs. RNA-only clustering**
+![WNN vs RNA-only](figures/03_fig_wnn_vs_rna_labeledByType.png)
 Side-by-side UMAPs (RNA-only vs. WNN), both colored by predicted.celltype.l2,
 with ARI values annotated:
 - RNA-only vs. WNN: 0.421 (WNN measurably changes cluster assignments)
