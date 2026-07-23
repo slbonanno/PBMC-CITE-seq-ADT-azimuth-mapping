@@ -184,6 +184,69 @@ fig_wnn_compare2
 ggsave("figures/03_fig_wnn_vs_rna_labeledByType.png", fig_wnn_compare2, width = 12, height = 5)
 
 
+####### table with cell counts #############
+
+library(gridExtra)
+library(grid)
+
+# helper: build count + % table for a cluster column, save as png
+save_cluster_table <- function(obj, column, filename) {
+  counts <- table(obj@meta.data[[column]])
+  df <- data.frame(
+    cluster = names(counts),
+    n = as.integer(counts),
+    pct = round(100 * as.integer(counts) / sum(counts), 1)
+  )
+  df <- df[order(-df$n), ]
+  colnames(df) <- c("Cluster", "n", "%")
+  
+  tbl_grob <- tableGrob(df, rows = NULL,
+                        theme = ttheme_minimal(base_size = 9))
+  
+  ggsave(filename, tbl_grob,
+         width = 3.5, height = 0.3 * nrow(df) + 1, limitsize = FALSE)
+}
+
+save_cluster_table(d2_pbmc_10x_CITE, "rna_only_clusters",
+                   "figures/table_rna_only_clusters.png")
+save_cluster_table(d2_pbmc_10x_CITE, "wnn_clusters",
+                   "figures/table_wnn_clusters.png")
+
+############### 2 tables merged into one, after transforming to Azimuth labels l2 #########
+
+library(dplyr)
+
+# for each clustering method, find each de novo cluster's dominant l2 label,
+# then tag every cell in that cluster with that dominant label
+label_by_dominant_l2 <- function(obj, cluster_col) {
+  obj@meta.data %>%
+    group_by(.data[[cluster_col]]) %>%
+    mutate(dominant_l2 = names(sort(table(predicted.celltype.l2), decreasing = TRUE))[1]) %>%
+    ungroup() %>%
+    pull(dominant_l2)
+}
+
+d2_pbmc_10x_CITE$rna_dominant_l2 <- label_by_dominant_l2(d2_pbmc_10x_CITE, "rna_only_clusters")
+d2_pbmc_10x_CITE$wnn_dominant_l2 <- label_by_dominant_l2(d2_pbmc_10x_CITE, "wnn_clusters")
+
+# combined table: one row per l2 identity, counts from both clusterings
+combined_df <- full_join(
+  as.data.frame(table(d2_pbmc_10x_CITE$rna_dominant_l2)) %>% rename(celltype = Var1, n_rna = Freq),
+  as.data.frame(table(d2_pbmc_10x_CITE$wnn_dominant_l2)) %>% rename(celltype = Var1, n_wnn = Freq),
+  by = "celltype"
+) %>%
+  mutate(n_rna = ifelse(is.na(n_rna), 0, n_rna),
+         n_wnn = ifelse(is.na(n_wnn), 0, n_wnn),
+         pct_rna = round(100 * n_rna / sum(n_rna), 1),
+         pct_wnn = round(100 * n_wnn / sum(n_wnn), 1)) %>%
+  arrange(desc(n_rna))
+
+library(gridExtra)
+tbl_grob <- tableGrob(combined_df, rows = NULL, theme = ttheme_minimal(base_size = 8))
+ggsave("figures/table_rna_vs_wnn_by_celltype.png", tbl_grob,
+       width = 6, height = 0.3 * nrow(combined_df) + 1, limitsize = FALSE)
+
+
 # ---- Save updated object ----
 d2_pbmc_10x_CITE$seurat_clusters <- d2_pbmc_10x_CITE$rna_only_clusters
 saveRDS(d2_pbmc_10x_CITE, "data/processed/d2_pbmc_10x_CITE_full_analysis.rds")

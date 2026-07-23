@@ -206,6 +206,61 @@ fig2
 
 ggsave("figures/02_fig2_refumap_2x2.png", fig2, width = 14, height = 12)
 
+############## cell count tables to go with it
+
+library(gridExtra)
+library(grid)
+
+# helper: build count + % table for any predicted.celltype.* column, save as png
+save_celltype_table <- function(obj, column, filename, title) {
+  counts <- table(obj@meta.data[[column]])
+  df <- data.frame(
+    celltype = names(counts),
+    n = as.integer(counts),
+    pct = round(100 * as.integer(counts) / sum(counts), 1)
+  )
+  df <- df[order(-df$n), ]  # sort descending by count
+  colnames(df) <- c("Cell type", "n", "%")
+  
+  tbl_grob <- tableGrob(df, rows = NULL,
+                        theme = ttheme_minimal(base_size = 9))
+  
+  ggsave(filename, tbl_grob,
+         width = 4, height = 0.3 * nrow(df) + 1, limitsize = FALSE)
+}
+
+save_celltype_table(d2_pbmc_10x_CITE, "predicted.celltype.l1",
+                    "figures/table_celltype_l1.png", "predicted.celltype.l1")
+save_celltype_table(d2_pbmc_10x_CITE, "predicted.celltype.l2",
+                    "figures/table_celltype_l2.png", "predicted.celltype.l2")
+save_celltype_table(d2_pbmc_10x_CITE, "predicted.celltype.l3",
+                    "figures/table_celltype_l3.png", "predicted.celltype.l3")
+
+
+# combined cell count table
+
+hierarchy_df <- d2_pbmc_10x_CITE@meta.data %>%
+  count(predicted.celltype.l1, predicted.celltype.l2, predicted.celltype.l3) %>%
+  arrange(predicted.celltype.l1, predicted.celltype.l2, desc(n)) %>%
+  mutate(pct = round(100 * n / sum(n), 1))
+
+# blank out repeated l1/l2 values so only the first row of each group shows the label
+hierarchy_df <- hierarchy_df %>%
+  mutate(
+    l1_display = ifelse(duplicated(predicted.celltype.l1), "", as.character(predicted.celltype.l1)),
+    l2_display = ifelse(duplicated(paste(predicted.celltype.l1, predicted.celltype.l2)), "",
+                        as.character(predicted.celltype.l2))
+  ) %>%
+  select(l1_display, l2_display, predicted.celltype.l3, n, pct) %>%
+  rename(l1 = l1_display, l2 = l2_display, l3 = predicted.celltype.l3, `%` = pct)
+
+tbl_grob <- tableGrob(hierarchy_df, rows = NULL,
+                      theme = ttheme_minimal(base_size = 8))
+
+ggsave("figures/table_celltype_hierarchy.png", tbl_grob,
+       width = 6, height = 0.25 * nrow(hierarchy_df) + 1, limitsize = FALSE)
+
+
 # ---- 5. Fig 3: ADT vs. RNA agreement across predicted.celltype.l2 ----
 
 # ADT marker -> actual ADT assay rowname (some got ".1" suffixes from Seurat's

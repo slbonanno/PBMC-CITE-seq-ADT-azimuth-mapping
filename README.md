@@ -69,11 +69,11 @@ EOF
 ```
 
 Open R studio, confirm it is pointed at this R version: Tools → Global Options →
-General → R version\n
-Open a new project via .Rproj file.\n
-Rstudio: File -> New Project -> Exiting Directory -> select your proj folder\n
-save as: PBMC-CITE-seq-ADT-azimuth-mapping.Rproj\n
-opening the proj this way auto sets wd to proj dir\n
+General → R version
+Open a new project via .Rproj file.
+Rstudio: File -> New Project -> Exiting Directory -> select your proj folder
+save as: PBMC-CITE-seq-ADT-azimuth-mapping.Rproj
+opening the proj this way auto sets wd to proj dir
 Then go to Rstudio console (R) and:
 ```r
 getwd()
@@ -213,8 +213,8 @@ diagnostic, not part of the main figure narrative:
 ![Figure 2](figures/02_fig1_denovo_overview.png)
 A) unlabeled RNA clusters, B) 3-marker ADT color blend overlay (CD14 red /
 CD19 green / CD3 blue), C) top-2 marker gene dotplot per cluster.
-Shows what a from-scratch analysis looks like without a reference.\n
-\n
+Shows what a from-scratch analysis looks like without a reference.
+
 unsupervised clustering is good - this is a good-quality dataset - but won't achieve resolution that Azimuth will.
 
 **Figure 3 - Azimuth-guided mapping**
@@ -226,13 +226,13 @@ Confirms mapping is biologically sensible: dominant CD4 T (39%) and
 Monocyte (27%) populations, expected PBMC composition overall.
 
 <img src="figures/table_celltype_l1.png" width="300"/>
-\n
-\n
+
+
 
 ADT and RNA signatures were z-scored within data-type, so they can be directly visualized side-by-side.
 
-\n
-\n
+
+
 **Figure 4 - ADT vs. RNA concordance**
 ![Figure 4](figures/02_fig3_full.png)
 A) heatmap (marker x predicted.celltype.l2, ADT and RNA panels, both
@@ -257,14 +257,14 @@ marker, despite Azimuth confidently calling these cells T cells from broader
 transcriptomic + protein context. ADT CD3 signal in this dropout group sits
 close to the RNA-detected T cell group, well above the B cell negative
 control - concrete evidence that protein detection rescues real signal RNA
-alone misses, even with a "stable" marker panel.\n
+alone misses, even with a "stable" marker panel.
 
 In this dataset, losing 3.2% of T cells may not have much impact in downstream analysis.  However, in some cases, protein expression outlasts RNA detectability
-and may even help define subclasses or biologically relevant distinctions (i.e. transcription OFF, cell identity still X)\n
-Note that this RNA vs ADT comparison may be pivotal in some analyses, but it is not immediately apparent how to apply this in a more interesting way, on this demo dataset\n
-Additionally, Azimuth mapping may give you a higher increase in value vis-a-vis clustering to rare cell types than adding the ADT data layer.\n
+and may even help define subclasses or biologically relevant distinctions (i.e. transcription OFF, cell identity still X)
+Note that this RNA vs ADT comparison may be pivotal in some analyses, but it is not immediately apparent how to apply this in a more interesting way, on this demo dataset
+Additionally, Azimuth mapping may give you a higher increase in value vis-a-vis clustering to rare cell types than adding the ADT data layer.
 At first pass, it seems that the power of CITE-seq is to include antibodies from a broader/more experimental panel than the minimal (defeatingly robust) subset chosen for the demo dataset.
-\n
+
 In some experiments, it may still be highly advantageous to use the ADT data layer to inform clustering using WNN rather than RNA-only (conventional).
 Though this is unlikely to be the case in this sample dataset, below is an exercise comparing RNA-only vs WNN clustering de-novo.
 Note: the predicted.celltype.l2 labels used for coloring/naming below came from Azimuth's RNA-only mapping (Section 3-I)
@@ -291,8 +291,8 @@ a real risk with WNN on an underpowered panel: without the markers that
 actually resolve fine-grained subtypes, adding ADT to clustering can
 overconfidently reassign cells into a dominant category rather than
 genuinely refining resolution - a form of overfitting to whatever limited
-signal the panel does provide, rather than true subtype separation.\n
-\n
+signal the panel does provide, rather than true subtype separation.
+
 **Moreover, labeling this
 unsupervised clustering using Hao et al. labels is unwise, because we don't have ADT signal from
 key antibodies that allowed higher res annotation in Hao et al.**
