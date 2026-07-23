@@ -204,7 +204,7 @@ save_cluster_table <- function(obj, column, filename) {
                         theme = ttheme_minimal(base_size = 9))
   
   ggsave(filename, tbl_grob,
-         width = 3.5, height = 0.3 * nrow(df) + 1, limitsize = FALSE)
+         width = 3.5, height = 0.3 * nrow(df) + 1, limitsize = FALSE, bg = "white")
 }
 
 save_cluster_table(d2_pbmc_10x_CITE, "rna_only_clusters",
@@ -244,7 +244,7 @@ combined_df <- full_join(
 library(gridExtra)
 tbl_grob <- tableGrob(combined_df, rows = NULL, theme = ttheme_minimal(base_size = 8))
 ggsave("figures/table_rna_vs_wnn_by_celltype.png", tbl_grob,
-       width = 6, height = 0.3 * nrow(combined_df) + 1, limitsize = FALSE)
+       width = 6, height = 0.3 * nrow(combined_df) + 1, limitsize = FALSE, bg = "white")
 
 
 # ---- Save updated object ----

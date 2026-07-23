@@ -226,7 +226,7 @@ save_celltype_table <- function(obj, column, filename, title) {
                         theme = ttheme_minimal(base_size = 9))
   
   ggsave(filename, tbl_grob,
-         width = 4, height = 0.3 * nrow(df) + 1, limitsize = FALSE)
+         width = 4, height = 0.3 * nrow(df) + 1, limitsize = FALSE, bg = "white")
 }
 
 save_celltype_table(d2_pbmc_10x_CITE, "predicted.celltype.l1",
@@ -258,7 +258,7 @@ tbl_grob <- tableGrob(hierarchy_df, rows = NULL,
                       theme = ttheme_minimal(base_size = 8))
 
 ggsave("figures/table_celltype_hierarchy.png", tbl_grob,
-       width = 6, height = 0.25 * nrow(hierarchy_df) + 1, limitsize = FALSE)
+       width = 6, height = 0.25 * nrow(hierarchy_df) + 1, limitsize = FALSE, bg = "white")
 
 
 # ---- 5. Fig 3: ADT vs. RNA agreement across predicted.celltype.l2 ----
